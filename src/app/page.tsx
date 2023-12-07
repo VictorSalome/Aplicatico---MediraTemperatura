@@ -1,113 +1,221 @@
-import Image from 'next/image'
+"use client";
+import React, { useState } from "react";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Flag from "react-country-flag";
+import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
+import OpacityOutlinedIcon from "@mui/icons-material/OpacityOutlined";
+import AirOutlinedIcon from "@mui/icons-material/AirOutlined";
+import CloudIcon from "@mui/icons-material/Cloud";
+import ClearIcon from "@mui/icons-material/WbSunny";
+import RainIcon from "@mui/icons-material/Grain";
+import SnowIcon from "@mui/icons-material/AcUnit";
+import MistIcon from "@mui/icons-material/CloudQueue";
+import FogOutlinedIcon from '@mui/icons-material/CloudOutlined';
 
-export default function Home() {
+const Home = () => {
+  const [location, setLocation] = useState("");
+  const [weatherData, setWeatherData] = useState(null);
+  const [error, setError] = useState(false);
+  const [emptyFieldError, setEmptyFieldError] = useState(false);
+
+  const handleSearch = async () => {
+    try {
+      if (location.trim() === "") {
+        setEmptyFieldError(true);
+        setWeatherData(null);
+        setError(false);
+        return;
+      } else {
+        setEmptyFieldError(false);
+      }
+
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&lang=pt&appid=0ae9acb4a1642e32b0c13c4336766592`;
+
+      const response = await fetch(apiUrl);
+
+      if (response.ok) {
+        const data = await response.json();
+        setWeatherData(data);
+        setError(false);
+      } else {
+        setError(true);
+      }
+    } catch (error) {
+      console.error("Erro ao obter dados de previsão do tempo:", error);
+      setError(true);
+    }
+  };
+
+  const clearWeatherData = () => {
+    if (location.trim() === "") {
+      setWeatherData(null);
+    }
+  };
+
+  const getWeatherIcon = (weatherCondition) => {
+    switch (weatherCondition) {
+      case "Clear":
+        return <ClearIcon style={{ marginRight: "5px" }} />;
+      case "Clouds":
+        return <CloudIcon style={{ marginRight: "5px" }} />;
+      case "Drizzle":
+      case "Rain":
+        return <RainIcon style={{ marginRight: "5px" }} />;
+      case "Snow":
+        return <SnowIcon style={{ marginRight: "5px" }} />;
+      case "Mist":
+        return <MistIcon style={{ marginRight: "5px" }} />;
+      case "Fog": 
+        return <FogOutlinedIcon style={{ marginRight: "5px" }} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div
+      style={{
+        padding: "20px",
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #314755, #26a0da)",
+      }}
+    >
+      <Typography
+        variant="h3"
+        style={{ textAlign: "center", marginBottom: "20px", color: "#fff" }}
+      >
+        Previsão do Tempo
+      </Typography>
+      <Grid container justifyContent="center">
+        <Grid item xs={12} sm={6}>
+          <Paper
+            elevation={6}
+            style={{ padding: "20px", background: "#f7f7f7" }}
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+              }}
+            >
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={8}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    type="text"
+                    value={location}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      clearWeatherData();
+                    }}
+                    name="location"
+                    placeholder="Digite a localização (cidade, país)"
+                    style={{ background: "#fff" }}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSearch}
+                    style={{
+                      background: "#26a0da",
+                      color: "#fff",
+                      "&:hover": { background: "#1b6ca8" },
+                    }}
+                  >
+                    Buscar
+                  </Button>
+                </Grid>
+              </Grid>
+            </form>
+            {emptyFieldError && (
+              <Typography
+                variant="body2"
+                style={{ color: "red", marginTop: "10px" }}
+              >
+                Por favor, insira uma localização para fazer a pesquisa.
+              </Typography>
+            )}
+            {weatherData && !error && location.trim() !== "" && (
+              <div style={{ marginTop: "20px" }}>
+                <Typography variant="h6" style={{ marginBottom: "10px" }}>
+                  Informações de {weatherData.name}, {weatherData.sys.country}:
+                  <Flag
+                    countryCode={weatherData.sys.country}
+                    style={{ marginLeft: "5px" }}
+                    svg
+                  />
+                </Typography>
+                <Typography
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "5px",
+                  }}
+                >
+                  {getWeatherIcon(weatherData.weather[0].main)} Condição:{" "}
+                  {weatherData.weather[0].description}
+                </Typography>
+                <Typography
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "5px",
+                  }}
+                >
+                  <WbSunnyOutlinedIcon
+                    style={{ marginRight: "5px", color: "#ffab40" }}
+                  />{" "}
+                  Temperatura: {Math.round(weatherData.main.temp)}°C
+                </Typography>
+                <Typography
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "5px",
+                  }}
+                >
+                  <OpacityOutlinedIcon
+                    style={{ marginRight: "5px", color: "#64b5f6" }}
+                  />{" "}
+                  Umidade: {weatherData.main.humidity}%
+                </Typography>
+                <Typography
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "5px",
+                  }}
+                >
+                  <AirOutlinedIcon
+                    style={{ marginRight: "5px", color: "#4db6ac" }}
+                  />{" "}
+                  Pressão Atmosférica: {weatherData.main.pressure} hPa
+                </Typography>
+                {/* Outras informações sobre o clima podem ser exibidas aqui */}
+              </div>
+            )}
+            {error && (
+              <Typography
+                variant="body2"
+                style={{ color: "red", marginTop: "20px" }}
+              >
+                Localização não encontrada. Por favor, insira uma localização
+                válida.
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </div>
+  );
+};
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
-}
+export default Home;
